@@ -10,6 +10,6 @@ public class TaskItem
     public string Description { get; set; } = string.Empty;
     public Enums.TaskStatus Status { get; set; } = Enums.TaskStatus.ToDo;
     public TaskPriority Priority { get; set; } = TaskPriority.Medium;
-    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+    public DateTime CreatedDate { get; set; } = DateTime.UtcNow;
     public DateTime? DueDate { get; set; }
 }
