@@ -57,7 +57,10 @@ public sealed class TaskService : ITaskService
        var existingTask =  await _unit.Tasks.GetTaskByIdAsync(task.Id);
         if (existingTask is null)
         {
-            throw new KeyNotFoundException($"Task with Id {task.Id} not found.");
+            throw new ValidateException(new Dictionary<string, string[]>
+            {
+               { nameof(task.Title), new[] { $"Task with Id {task.Id} not found." } }
+            });
         }
 
         existingTask.Title = task.Title;
@@ -65,6 +68,7 @@ public sealed class TaskService : ITaskService
         existingTask.Status = (Domain.Enums.TaskStatus)Enum.Parse<Domain.Enums.TaskStatus>(task.Status);
         existingTask.Priority = Enum.Parse<TaskPriority>(task.Priority);
         existingTask.DueDate = task.DueDate;
+
         await _unit.Tasks.UpdateAsync(existingTask);
         await _unit.CompleteAsync();
     }
