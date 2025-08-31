@@ -2,7 +2,10 @@
 @using Pascual.TaskManagementSystem.Blazor.Components
 @using Pascual.TaskManagementSystem.Blazor.Services
 @using TaskManagementSystem.Application.DTOs
+@using static Pascual.TaskManagementSystem.Blazor.Services.ToastMessage
+
 @inject TaskApiService TaskService
+@inject ToastService Toasts
 
 <PageTitle>Tasks</PageTitle>
 
@@ -119,6 +122,7 @@ else
     {
         await TaskService.DeleteTaskAsync(taskToDelete);
         await ReloadTasks();
+        Toasts.ShowSuccess("Task Deleted.");
     }
 
     private async Task OnTaskSaved()
@@ -136,5 +140,3 @@ else
     private void ShowCardView() => isCardView = true;
     private void ShowTableView() => isCardView = false;
 }
-
-

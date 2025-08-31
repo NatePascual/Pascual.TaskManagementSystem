@@ -1,5 +1,8 @@
 ﻿@using Pascual.TaskManagementSystem.Application.DTOs
 @using Pascual.TaskManagementSystem.Blazor.Services
+@using static Pascual.TaskManagementSystem.Blazor.Services.ToastMessage
+
+@inject ToastService Toast
 @inject TaskApiService TaskService
 
 <EditForm Model="@task" FormName="CreateUpdateTask" OnValidSubmit="HandleValidSubmit">
@@ -83,18 +86,34 @@
 
     private async Task HandleValidSubmit()
     {
-        if (!IsEditMode)
+        try
         {
-            task.Id = Guid.NewGuid();
-            task.CreatedDate = DateTime.Now;
-            await TaskService.CreateTaskAsync(task);
+            if (!IsEditMode)
+            {
+                task.Id = Guid.NewGuid();
+                task.CreatedDate = DateTime.Now;
+                await TaskService.CreateTaskAsync(task);
+                Toast.ShowSuccess("Task created successfully.");
+            }
+            else
+            {
+                await TaskService.UpdateTaskAsync(task);
+                Toast.ShowSuccess("Task updated successfully.");
+            }
+
+            await OnTaskSaved.InvokeAsync();
         }
-        else
+        catch (HttpRequestException ex)
         {
-            await TaskService.UpdateTaskAsync(task);
+            Toast.ShowError($"Network error: {ex.Message}");
+           
+        }
+        catch (Exception ex)
+        {
+            Toast.ShowError($"Save Failed: {ex.Message}");
         }
 
-        await OnTaskSaved.InvokeAsync();
+   
     }
 
     private async Task Cancel()

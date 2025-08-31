@@ -1,0 +1,71 @@
+﻿@using Pascual.TaskManagementSystem.Blazor.Services
+@using static Pascual.TaskManagementSystem.Blazor.Services.ToastMessage
+@inject ToastService Toasts
+
+<div class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 3000;">
+    @foreach (var t in _toasts)
+    {
+        var cls = ToastClass(t.Level);
+        <div class="toast show align-items-center text-white border-0 mb-2 @cls" role="alert" aria-live="assertive" aria-atomic="true">
+            <div class="d-flex">
+                <div class="toast-body">
+                    @if (!string.IsNullOrWhiteSpace(t.Title))
+                    {
+                        <div class="fw-semibold mb-1">@t.Title</div>
+                    }
+                    @t.Message
+                </div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto"
+                        @onclick="() => Close(t.Id)" aria-label="Close"></button>
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    private readonly List<ToastMessage> _toasts = new();
+
+    protected override void OnInitialized()
+    {
+        Toasts.OnShow += HandleShow;
+        Toasts.OnHide += HandleHide;
+    }
+
+    private void HandleShow(ToastMessage msg)
+    {
+        _toasts.Add(msg);
+        StateHasChanged();
+
+        // Auto-close if requested (no Bootstrap JS needed)
+        if (msg.AutoCloseMs > 0)
+            _ = AutoCloseAsync(msg.Id, msg.AutoCloseMs);
+    }
+
+    private void HandleHide(Guid id)
+    {
+        _toasts.RemoveAll(x => x.Id == id);
+        InvokeAsync(StateHasChanged);
+    }
+
+    private async Task AutoCloseAsync(Guid id, int delay)
+    {
+        try { await Task.Delay(delay); Close(id); } catch { /* ignored */ }
+    }
+
+    private void Close(Guid id) => Toasts.Hide(id);
+
+    private static string ToastClass(ToastLevel level) => level switch
+    {
+        ToastLevel.Success => "bg-success",
+        ToastLevel.Info => "bg-primary",
+        ToastLevel.Warning => "bg-warning text-dark",
+        ToastLevel.Error => "bg-danger",
+        _ => "bg-secondary"
+    };
+
+    public void Dispose()
+    {
+        Toasts.OnShow -= HandleShow;
+        Toasts.OnHide -= HandleHide;
+    }
+}
