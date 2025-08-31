@@ -1,5 +1,30 @@
 ﻿@using Pascual.TaskManagementSystem.Application.DTOs
-
+<div class="row g-2 align-items-end mb-3">
+    <div class="col-12 col-sm-6 col-md-3">
+        <label class="form-label mb-1">Status</label>
+        <select class="form-select" @bind="StatusFilter">
+            @foreach (var s in StatusOptions)
+            {
+                <option value="@s">@s</option>
+            }
+        </select>
+    </div>
+    <div class="col-12 col-sm-6 col-md-3">
+        <label class="form-label mb-1">Priority</label>
+        <select class="form-select" @bind="PriorityFilter">
+            @foreach (var p in PriorityOptions)
+            {
+                <option value="@p">@p</option>
+            }
+        </select>
+    </div>
+    <div class="col-12 col-md-3 d-flex gap-2">
+        <button type="button" class="btn btn-outline-secondary" @onclick="ClearFilters">Clear Filters</button>
+        <div class="align-self-center small text-muted">
+            Showing <strong>@_view.Count</strong> of <strong>@(Tasks?.Count ?? 0)</strong>
+        </div>
+    </div>
+</div>
 @if (Tasks is null || Tasks.Count == 0)
 {
     <p class="text-muted">No tasks to display.</p>
@@ -10,15 +35,35 @@ else
         <table class="table table-striped align-middle">
             <thead>
                 <tr>
-                    <th>Title</th>
-                    <th class="d-none d-sm-table-cell">Status</th>
-                    <th class="d-none d-md-table-cell">Priority</th>
-                    <th class="d-none d-lg-table-cell">Due</th>
+                    <th>
+                        <button type="button" class="btn btn-link p-0 text-decoration-none text-reset"
+                                @onclick="() => SetSort(SortColumn.Title)">
+                            Title @Indicator(SortColumn.Title)
+                        </button>
+                    </th>
+                    <th class="d-none d-sm-table-cell">
+                        <button type="button" class="btn btn-link p-0 text-decoration-none text-reset"
+                                @onclick="() => SetSort(SortColumn.Status)">
+                            Status @Indicator(SortColumn.Status)
+                        </button>
+                    </th>
+                    <th class="d-none d-md-table-cell">
+                        <button type="button" class="btn btn-link p-0 text-decoration-none text-reset"
+                                @onclick="() => SetSort(SortColumn.Priority)">
+                            Priority @Indicator(SortColumn.Priority)
+                        </button>
+                    </th>
+                    <th class="d-none d-lg-table-cell">
+                        <button type="button" class="btn btn-link p-0 text-decoration-none text-reset"
+                                @onclick="() => SetSort(SortColumn.DueDate)">
+                            Due Date @Indicator(SortColumn.DueDate)
+                        </button>
+                    </th>
                     <th class="text-end">Actions</th>
                 </tr>
             </thead>
             <tbody>
-                @foreach (var task in Tasks)
+                @foreach (var task in _view)
                 {
                     <tr>
                         <td class="fw-semibold text-truncate" style="max-width: 220px;">@task.Title</td>
@@ -40,6 +85,127 @@ else
     [Parameter] public List<TaskDTO>? Tasks { get; set; }
     [Parameter] public EventCallback<TaskDTO> OnEdit { get; set; }
     [Parameter] public EventCallback<Guid> OnDelete { get; set; }
+
+    // Options
+    private static readonly string[] StatusOptions = new[] { "All", "Todo", "InProgress", "Done" };
+    private static readonly string[] PriorityOptions = new[] { "All", "Low", "Medium", "High" };
+
+    // Filter state (with setters that re-apply filtering)
+    private string _statusFilter = "All";
+    private string _priorityFilter = "All";
+
+    private string StatusFilter
+    {
+        get => _statusFilter;
+        set { _statusFilter = value; ApplyFilterAndSort(); }
+    }
+
+    private string PriorityFilter
+    {
+        get => _priorityFilter;
+        set { _priorityFilter = value; ApplyFilterAndSort(); }
+    }
+
+
+    private SortColumn _sortCol = SortColumn.Title;
+    private bool _asc = true;
+
+    private List<TaskDTO> _filtered = new();
+    private List<TaskDTO> _view = new();
+    private SortColumn _sortColumn = SortColumn.Title;
+
+
+    private enum SortColumn
+    {
+        Title,
+        Status,
+        Priority,
+        DueDate
+    }
+    private string Indicator(SortColumn c) => _sortColumn == c ? (_asc ? " ▲" : " ▼") : string.Empty;
+
+    protected override void OnParametersSet()
+    {
+        _view = (Tasks ?? new()).ToList();
+        ApplyFilterAndSort();
+    }
+
+    private void ClearFilters()
+    {
+        _statusFilter = "All";
+        _priorityFilter = "All";
+        ApplyFilterAndSort();
+    }
+
+    private void SetSort(SortColumn col)
+    {
+        if (_sortCol == col) _asc = !_asc; else { _sortCol = col; _asc = true; }
+        ApplyFilterAndSort();
+    }
+    private void ApplyFilterAndSort()
+    {
+        IEnumerable<TaskDTO> query = (Tasks ?? new());
+
+        query = query.Where(t =>
+            (_statusFilter == "All" || string.Equals(t.Status, _statusFilter, StringComparison.OrdinalIgnoreCase)) &&
+            (_priorityFilter == "All" || string.Equals(t.Priority, _priorityFilter, StringComparison.OrdinalIgnoreCase))
+        );
+
+        _filtered = query.ToList();
+
+        IEnumerable<TaskDTO> sorted = _filtered;
+        switch (_sortCol)
+        {
+            case SortColumn.Title:
+                sorted = _asc
+                    ? sorted.OrderBy(t => t.Title, StringComparer.OrdinalIgnoreCase)
+                    : sorted.OrderByDescending(t => t.Title, StringComparer.OrdinalIgnoreCase);
+                break;
+
+            case SortColumn.Status:
+                sorted = _asc
+                    ? sorted.OrderBy(t => StatusRank(t.Status)).ThenBy(t => t.Title, StringComparer.OrdinalIgnoreCase)
+                    : sorted.OrderByDescending(t => StatusRank(t.Status)).ThenBy(t => t.Title, StringComparer.OrdinalIgnoreCase);
+                break;
+
+            case SortColumn.Priority:
+                sorted = _asc
+                    ? sorted.OrderBy(t => PriorityRank(t.Priority)).ThenBy(t => t.Title, StringComparer.OrdinalIgnoreCase)
+                    : sorted.OrderByDescending(t => PriorityRank(t.Priority)).ThenBy(t => t.Title, StringComparer.OrdinalIgnoreCase);
+                break;
+
+            case SortColumn.DueDate:
+                sorted = _asc
+                    ? sorted.OrderBy(t => t.DueDate is null ? 1 : 0).ThenBy(t => t.DueDate)
+                    : sorted.OrderBy(t => t.DueDate is null ? 1 : 0).ThenByDescending(t => t.DueDate);
+                break;
+
+            default:
+                sorted = _asc ? sorted.OrderBy(t => t.Title)
+                         : sorted.OrderByDescending(t => t.Title);
+                break;
+        }
+
+        _view = sorted.ToList();
+        StateHasChanged();
+    }
+   
+
+    private static int PriorityRank(string? p) => p?.ToLowerInvariant() switch
+    {
+        "high" => 3,
+        "medium" => 2,
+        "low" => 1,
+        _ => 0
+    };
+
+    private static int StatusRank(string? s) => s?.ToLowerInvariant() switch
+    {
+        "todo" => 1,
+        "inprogress" => 2,
+        "done" => 3,
+        _ => 0
+    };
 
     private static string PriorityClass(string priority) => priority switch
     {
