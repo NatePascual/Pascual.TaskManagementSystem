@@ -7,7 +7,7 @@ public class TaskItem
 {
     public Guid Id { get; set; } = Guid.NewGuid();
     public string Title { get; set; } = string.Empty;
-    public string Description { get; set; } = string.Empty;
+    public string? Description { get; set; }
     public Enums.TaskStatus Status { get; set; } = Enums.TaskStatus.ToDo;
     public TaskPriority Priority { get; set; } = TaskPriority.Medium;
     public DateTime CreatedDate { get; set; } = DateTime.UtcNow;

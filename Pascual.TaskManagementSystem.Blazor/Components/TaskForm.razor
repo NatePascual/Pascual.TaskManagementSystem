@@ -6,46 +6,53 @@
     <DataAnnotationsValidator />
     <ValidationSummary />
 
-    <div class="mb-3">
-        <label class="form-label">Title</label>
-        <InputText class="form-control" @bind-Value="task.Title" />
-    </div>
+    <div class="row g-3">
+        <div class="col-12">
+            <label class="form-label">Title</label>
+            <InputText class="form-control" @bind-Value="task.Title" />
+        </div>
 
-    <div class="mb-3">
-        <label class="form-label">Description</label>
-        <InputTextArea class="form-control" @bind-Value="task.Description" />
-    </div>
+        <div class="col-12">
+            <label class="form-label">Description</label>
+            <InputTextArea class="form-control" @bind-Value="task.Description" />
+        </div>
 
-    <div class="mb-3">
-        <label class="form-label">Status</label>
-        <InputSelect class="form-select" @bind-Value="task.Status">
-            <option value="ToDo">ToDo</option>
-            <option value="InProgress">In Progress</option>
-            <option value="Done">Done</option>
-        </InputSelect>
-    </div>
+        <div class="col-12 col-md-6">
+            <label class="form-label">Status</label>
+            <InputSelect class="form-select" @bind-Value="task.Status">
+                <option value="ToDo">ToDo</option>
+                <option value="InProgress">In Progress</option>
+                <option value="Done">Done</option>
+            </InputSelect>
+        </div>
 
-    <div class="mb-3">
-        <label class="form-label">Priority</label>
-        <InputSelect class="form-select" @bind-Value="task.Priority">
-            <option value="Low">Low</option>
-            <option value="Medium">Medium</option>
-            <option value="High">High</option>
-        </InputSelect>
-    </div>
+        <div class="col-12 col-md-6">
+            <label class="form-label">Priority</label>
+            <InputSelect class="form-select" @bind-Value="task.Priority">
+                <option value="Low">Low</option>
+                <option value="Medium">Medium</option>
+                <option value="High">High</option>
+            </InputSelect>
+        </div>
 
-    <div class="mb-3">
-        <label class="form-label">Due Date</label>
-        <InputDate class="form-control" @bind-Value="task.DueDate" />
-    </div>
+        <div class="col-12 col-md-6">
+            <label class="form-label">Due Date</label>
+            <InputDate class="form-control" @bind-Value="task.DueDate" />
+        </div>
 
-    <button type="submit" class="btn btn-success">Save</button>
+        <div class="col-12 d-flex flex-column flex-sm-row gap-2 mt-2">
+            <button type="submit" class="btn btn-success">Save</button>
+            <button type="button" class="btn btn-secondary" @onclick="Cancel">Cancel</button>
+        </div>
+    </div>
+  
 </EditForm>
 
 @code {
     [Parameter] public EventCallback OnTaskSaved { get; set; }
+    [Parameter] public EventCallback OnCancel { get; set; } 
 
-    private readonly TaskDTO task = new();
+    private TaskDTO task = new();
     private bool IsEditMode => task.Id != Guid.Empty;
 
     public void Open(TaskDTO? input = null)
@@ -81,7 +88,6 @@
             task.Id = Guid.NewGuid();
             task.CreatedDate = DateTime.Now;
             await TaskService.CreateTaskAsync(task);
-            Open();
         }
         else
         {
@@ -89,5 +95,11 @@
         }
 
         await OnTaskSaved.InvokeAsync();
+    }
+
+    private async Task Cancel()
+    {
+        task = new TaskDTO();
+        await OnCancel.InvokeAsync();
     }
 }

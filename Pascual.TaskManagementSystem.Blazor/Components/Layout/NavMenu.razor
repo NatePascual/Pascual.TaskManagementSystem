@@ -1,21 +1,13 @@
-﻿<div class="d-flex flex-column flex-shrink-0 p-3 text-white bg-dark" style="width: 200px; height: 100vh;">
-    <a href="/" class="d-flex align-items-center mb-3 mb-md-0 me-md-auto text-white text-decoration-none">
-        <span class="fs-4">Task Manager</span>
-    </a>
-    <hr>
-    <ul class="nav nav-pills flex-column mb-auto">
-
-        <li class="nav-item">
-            <NavLink class="nav-link text-white" href="" Match="NavLinkMatch.All">
-                <span class="oi oi-home" aria-hidden="true"></span> Home
-            </NavLink>
-        </li>
-
-        <li>
-            <NavLink class="nav-link text-white" href="tasks">
-                <span class="oi oi-list-rich" aria-hidden="true"></span> Tasks
-            </NavLink>
-        </li>
-
-    </ul>
-</div>
+﻿<ul class="nav nav-pills flex-column mb-auto">
+    <li class="nav-item">
+        <NavLink class="nav-link text-white" ActiveClass="active"
+                 href="" Match="NavLinkMatch.All">
+            <span class="oi oi-home" aria-hidden="true"></span> Home
+        </NavLink>
+    </li>
+    <li>
+        <NavLink class="nav-link text-white" ActiveClass="active" href="tasks">
+            <span class="oi oi-list-rich" aria-hidden="true"></span> Tasks
+        </NavLink>
+    </li>
+</ul>
