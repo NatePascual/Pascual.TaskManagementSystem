@@ -1,0 +1,39 @@
+﻿<div class="modal fade" tabindex="-1" role="dialog" style="display:@(IsOpen ? "block" : "none")">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Confirm</h5>
+                <button type="button" class="btn-close" @onclick="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>@Message</p>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" @onclick="Close">Cancel</button>
+                <button class="btn btn-danger" @onclick="Confirm">Confirm</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    private bool IsOpen { get; set; }
+    private string Message { get; set; } = "";
+
+    [Parameter] public EventCallback OnConfirm { get; set; }
+
+    public void Open(string message)
+    {
+        Message = message;
+        IsOpen = true;
+        StateHasChanged();
+    }
+
+    private void Close() => IsOpen = false;
+
+    private async Task Confirm()
+    {
+        await OnConfirm.InvokeAsync();
+        IsOpen = false;
+    }
+}

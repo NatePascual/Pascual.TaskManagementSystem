@@ -1,0 +1,96 @@
+﻿@using Pascual.TaskManagementSystem.Application.DTOs
+@using Pascual.TaskManagementSystem.Blazor.Services
+@inject TaskApiService TaskService
+
+<EditForm Model="@task" FormName="CreateUpdateTask" OnValidSubmit="HandleValidSubmit">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+
+    <div class="mb-3">
+        <label class="form-label">Title</label>
+        <InputText class="form-control" @bind-Value="task.Title" />
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Description</label>
+        <InputTextArea class="form-control" @bind-Value="task.Description" />
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Status</label>
+        <InputSelect class="form-select" @bind-Value="task.Status">
+            <option value="ToDo">ToDo</option>
+            <option value="InProgress">In Progress</option>
+            <option value="Done">Done</option>
+        </InputSelect>
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Priority</label>
+        <InputSelect class="form-select" @bind-Value="task.Priority">
+            <option value="Low">Low</option>
+            <option value="Medium">Medium</option>
+            <option value="High">High</option>
+        </InputSelect>
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Due Date</label>
+        <InputDate class="form-control" @bind-Value="task.DueDate" />
+    </div>
+
+    <button type="submit" class="btn btn-success">Save</button>
+</EditForm>
+
+<!-- live debug -->
+<pre>@System.Text.Json.JsonSerializer.Serialize(task)</pre>
+
+@code {
+    [Parameter] public EventCallback OnTaskSaved { get; set; }
+
+    private readonly TaskDTO task = new();
+    private bool IsEditMode => task.Id != Guid.Empty;
+
+    public void Open(TaskDTO? input = null)
+    {
+        if (input is null) 
+        {
+            task.Id = Guid.Empty;
+            task.Title = string.Empty;
+            task.Description = string.Empty;
+            task.Status = "ToDo";
+            task.Priority = "Low";
+            task.CreatedDate = DateTime.Now;
+            task.DueDate = null;
+        }
+        else 
+        {
+            task.Id = input.Id;
+            task.Title = input.Title;
+            task.Description = input.Description;
+            task.Status = input.Status;
+            task.Priority = input.Priority;
+            task.CreatedDate = input.CreatedDate;
+            task.DueDate = input.DueDate;
+        }
+
+        StateHasChanged();
+    }
+
+    private async Task HandleValidSubmit()
+    {
+        if (!IsEditMode)
+        {
+            task.Id = Guid.NewGuid();
+            task.CreatedDate = DateTime.Now;
+            await TaskService.CreateTaskAsync(task);
+            Open();
+        }
+        else
+        {
+            await TaskService.UpdateTaskAsync(task);
+        }
+
+        await OnTaskSaved.InvokeAsync();
+    }
+}

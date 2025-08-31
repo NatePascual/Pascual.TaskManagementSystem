@@ -1,0 +1,20 @@
+﻿@using Pascual.TaskManagementSystem.Application.DTOs
+<div class="card mb-3">
+    <div class="card-body">
+        <h5 class="card-title">@Task.Title</h5>
+        <p class="card-text">@Task.Description</p>
+        <span class="badge bg-info">@Task.Status</span>
+        <span class="badge @(Task.Priority == "High" ? "bg-danger" : Task.Priority == "Medium" ? "bg-warning" : "bg-success")">
+            @Task.Priority
+        </span>
+        <p class="mt-2"><small>Due: @(Task.DueDate?.ToShortDateString() ?? "-")</small></p>
+        <button class="btn btn-sm btn-primary me-1" @onclick="() => OnEdit.InvokeAsync(Task)">Edit</button>
+        <button class="btn btn-sm btn-danger" @onclick="() => OnDelete.InvokeAsync(Task.Id)">Delete</button>
+    </div>
+</div>
+
+@code {
+    [Parameter] public TaskDTO Task { get; set; } = default!;
+    [Parameter] public EventCallback<TaskDTO> OnEdit { get; set; }
+    [Parameter] public EventCallback<Guid> OnDelete { get; set; }
+}

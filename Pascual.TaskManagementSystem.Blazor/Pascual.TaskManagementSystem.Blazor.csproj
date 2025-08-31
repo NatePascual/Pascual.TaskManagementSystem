@@ -6,4 +6,8 @@
     <ImplicitUsings>enable</ImplicitUsings>
   </PropertyGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\Pascual.TaskManagementSystem.Application\Pascual.TaskManagementSystem.Application.csproj" />
+  </ItemGroup>
+
 </Project>
