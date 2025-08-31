@@ -42,9 +42,6 @@
     <button type="submit" class="btn btn-success">Save</button>
 </EditForm>
 
-<!-- live debug -->
-<pre>@System.Text.Json.JsonSerializer.Serialize(task)</pre>
-
 @code {
     [Parameter] public EventCallback OnTaskSaved { get; set; }
 
