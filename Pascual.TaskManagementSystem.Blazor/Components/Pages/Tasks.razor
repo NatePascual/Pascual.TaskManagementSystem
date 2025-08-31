@@ -1,0 +1,140 @@
+﻿@page "/tasks"
+@using Pascual.TaskManagementSystem.Blazor.Components
+@using Pascual.TaskManagementSystem.Blazor.Services
+@using TaskManagementSystem.Application.DTOs
+@inject TaskApiService TaskService
+
+<PageTitle>Tasks</PageTitle>
+
+<h3 class="mb-3">Task Management</h3>
+
+<div class="d-flex justify-content-between mb-3">
+    <button type="button" class="btn btn-success" @onclick="OpenNewTaskForm">
+        <i class="oi oi-plus"></i> New Task
+    </button>
+
+    @if (isCardView)
+    {
+        <button type="button" class="btn btn-outline-primary" @onclick="ShowTableView">
+            Show Table View
+        </button>
+    }
+    else
+    {
+
+        <button type="button" class="btn btn-outline-primary" @onclick="ShowCardView">
+            Show Card View
+        </button>
+    }
+
+</div>
+
+@if (tasks is null)
+{
+    <p><em>Loading tasks...</em></p>
+}
+else if (tasks.Count == 0)
+{
+    <p><em>No tasks found. Click "New Task" to add one.</em></p>
+}
+else
+{
+    @if (isCardView)
+    {
+        <div class="row row-cols-1 row-cols-sm-2 row-cols-lg-3 g-3">
+            @foreach (var task in tasks)
+            {
+                <div class="col-md-4">
+                    <TaskCard Task="@task"
+                              OnEdit="EditTask"
+                              OnDelete="ConfirmDelete" />
+                </div>
+            }
+        </div>
+    }
+    else
+    {
+        <TaskList Tasks="@tasks"
+                  OnEdit="EditTask"
+                  OnDelete="ConfirmDelete" />
+    }
+}
+
+@if (isFormVisible)
+{
+    <TaskForm @ref="taskForm" OnTaskSaved="OnTaskSaved" OnCancel="HideForm" />
+}
+<ConfirmDialog @ref="confirmDialog" OnConfirm="DeleteConfirmed" />
+
+@code {
+    private List<TaskDTO> tasks = new();
+    private TaskForm? taskForm;
+    private ConfirmDialog? confirmDialog;
+    private Guid taskToDelete;
+    private bool isCardView = false; 
+    private bool isFormVisible = false;
+    private TaskDTO? pendingEdit;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await ReloadTasks();
+    }
+
+    private async Task ReloadTasks()
+    {
+        tasks = await TaskService.GetAllTasksAsync();
+        StateHasChanged();
+    }
+
+    private void OpenNewTaskForm()
+    {
+
+        taskForm?.Open();
+        isFormVisible = true;
+    }
+
+    private void EditTask(TaskDTO task)
+    {
+        pendingEdit = task;
+        isFormVisible = true;
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (isFormVisible && pendingEdit is not null && taskForm is not null)
+        {
+            taskForm.Open(pendingEdit); 
+            pendingEdit = null;
+            StateHasChanged(); 
+        }
+    }
+
+    private void ConfirmDelete(Guid id)
+    {
+        taskToDelete = id;
+        confirmDialog?.Open("Are you sure you want to delete this task?");
+    }
+
+    private async Task DeleteConfirmed()
+    {
+        await TaskService.DeleteTaskAsync(taskToDelete);
+        await ReloadTasks();
+    }
+
+    private async Task OnTaskSaved()
+    {
+        isFormVisible = false;  
+        await ReloadTasks();
+    }
+
+    private void ToggleView()
+    {
+        isCardView = !isCardView;
+    }
+
+    private void HideForm() => isFormVisible = false;
+    private void ShowCardView() => isCardView = true;
+    private void ShowTableView() => isCardView = false;
+}
+
+

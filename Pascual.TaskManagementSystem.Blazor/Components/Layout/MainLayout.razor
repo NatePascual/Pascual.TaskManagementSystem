@@ -1,18 +1,68 @@
 ﻿@inherits LayoutComponentBase
+@implements IDisposable
+@inject NavigationManager Nav
 
-<div class="page">
-    <div class="sidebar">
+@code {
+    private bool menuOpen;
+
+    protected override void OnInitialized()
+    {
+        Nav.LocationChanged += HandleLocationChanged;
+    }
+
+    private void HandleLocationChanged(object? sender, Microsoft.AspNetCore.Components.Routing.LocationChangedEventArgs e)
+    {
+        if (menuOpen)
+        {
+            menuOpen = false;
+            StateHasChanged();
+        }
+    }
+
+    public void Dispose()
+    {
+        Nav.LocationChanged -= HandleLocationChanged;
+    }
+}
+
+<header class="navbar navbar-dark bg-dark d-md-none">
+    <div class="container-fluid">
+        <a class="navbar-brand" href="/">Task Manager</a>
+        <button class="navbar-toggler" type="button" @onclick="() => menuOpen = true" aria-label="Open menu" aria-expanded="@menuOpen">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+    </div>
+</header>
+
+<div class="d-md-none">
+    <div class="@($"drawer {(menuOpen ? "show" : "")}")" role="dialog" aria-modal="true" aria-label="Navigation">
+        <div class="d-flex align-items-center justify-content-between mb-2">
+            <span class="fs-5">Menu</span>
+            <button class="btn btn-sm btn-light" @onclick="() => menuOpen = false" aria-label="Close menu">Close</button>
+        </div>
         <NavMenu />
     </div>
+    <div class="@($"drawer-backdrop {(menuOpen ? "show" : "")}")" @onclick="() => menuOpen = false"></div>
+</div>
 
-    <main>
-        <div class="top-row px-4">
-            <a href="https://learn.microsoft.com/aspnet/core/" target="_blank">About</a>
+<div class="page d-flex">
+    <aside class="d-none d-md-flex flex-column flex-shrink-0 p-3 text-white bg-dark"
+           style="width:250px; min-height:100vh;">
+        <a href="/" class="d-flex align-items-center mb-3 text-white text-decoration-none">
+            <span class="fs-4">Task Manager</span>
+        </a>
+        <hr />
+        <NavMenu />
+    </aside>
+
+    <main class="flex-grow-1 p-3 p-md-4">
+        <div class="top-row px-3 px-md-4 d-flex justify-content-end">
+            <a href="https://learn.microsoft.com/aspnet/core/" target="_blank" rel="noopener">About</a>
         </div>
 
-        <article class="content px-4">
+        <div class="container-fluid px-3 px-md-4 py-3">
             @Body
-        </article>
+        </div>
     </main>
 </div>
 
@@ -21,3 +71,45 @@
     <a href="" class="reload">Reload</a>
     <a class="dismiss">🗙</a>
 </div>
+
+<style>
+
+    .drawer {
+        position: fixed;
+        top: 0;
+        left: 0;
+        bottom: 0;
+        width: 260px;
+        background: #212529;
+        color: #fff;
+        transform: translateX(-100%);
+        transition: transform .25s ease;
+        z-index: 2000;
+        padding: 1rem;
+        overflow-y: auto;
+        box-shadow: 0 10px 30px rgba(0,0,0,.35);
+    }
+
+        .drawer.show {
+            transform: translateX(0);
+        }
+
+    .drawer-backdrop {
+        position: fixed;
+        inset: 0;
+        background: rgba(0,0,0,.35);
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity .2s ease;
+        z-index: 1999;
+    }
+
+        .drawer-backdrop.show {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+    .page {
+        min-height: 100vh;
+    }
+</style>

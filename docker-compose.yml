@@ -1,0 +1,39 @@
+version: "3.9"
+services:
+  api:
+    build:
+      context: .
+      dockerfile: Pascual.TaskManagementSystem.API/Dockerfile
+    container_name: tms-api
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:8080
+    ports:
+      - "8080:8080"
+
+  blazor:
+    build:
+      context: .
+      dockerfile: Pascual.TaskManagementSystem.Blazor/Dockerfile
+    container_name: tms-blazor
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:8081
+      - ApiBaseUrl=http://api:8080/
+    depends_on:
+      - api
+    ports:
+      - "8081:8081"
+# services:
+#   api:
+#     image: tms-api:latest
+#     container_name: tms-api
+#     ports: ["8080:8080"]
+
+#   blazor:
+#     image: tms-blazor:latest
+#     container_name: tms-blazor
+#     environment:
+#       - ApiBaseUrl=http://api:8080/
+#     ports: ["8081:8081"]
+#     depends_on: [api]

@@ -1,0 +1,51 @@
+﻿@using Pascual.TaskManagementSystem.Application.DTOs
+
+@if (Tasks is null || Tasks.Count == 0)
+{
+    <p class="text-muted">No tasks to display.</p>
+}
+else
+{
+     <div class="table-responsive"> 
+        <table class="table table-striped align-middle">
+            <thead>
+                <tr>
+                    <th>Title</th>
+                    <th class="d-none d-sm-table-cell">Status</th>
+                    <th class="d-none d-md-table-cell">Priority</th>
+                    <th class="d-none d-lg-table-cell">Due</th>
+                    <th class="text-end">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var task in Tasks)
+                {
+                    <tr>
+                        <td class="fw-semibold text-truncate" style="max-width: 220px;">@task.Title</td>
+                        <td class="d-none d-sm-table-cell"><span class="badge bg-info">@task.Status</span></td>
+                        <td class="d-none d-md-table-cell"><span class="badge @PriorityClass(task.Priority)">@task.Priority</span></td>
+                        <td class="d-none d-lg-table-cell">@((task.DueDate?.ToShortDateString()) ?? "-")</td>
+                        <td class="text-end">
+                            <button type="button" class="btn btn-sm btn-primary me-2" @onclick="() => OnEdit.InvokeAsync(task)">Edit</button>
+                            <button type="button" class="btn btn-sm btn-danger" @onclick="() => OnDelete.InvokeAsync(task.Id)">Delete</button>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}
+
+@code {
+    [Parameter] public List<TaskDTO>? Tasks { get; set; }
+    [Parameter] public EventCallback<TaskDTO> OnEdit { get; set; }
+    [Parameter] public EventCallback<Guid> OnDelete { get; set; }
+
+    private static string PriorityClass(string priority) => priority switch
+    {
+        "High" => "bg-danger",
+        "Medium" => "bg-warning text-dark",
+        "Low" => "bg-success",
+        _ => "bg-secondary"
+    };
+}

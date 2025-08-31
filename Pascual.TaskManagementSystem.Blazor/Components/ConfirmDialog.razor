@@ -1,0 +1,55 @@
+﻿<div class="modal fade @(IsOpen ? "show" : "")"
+     tabindex="-1"
+     role="dialog"
+     aria-modal="@IsOpen"
+     aria-hidden="@(!IsOpen)"
+     style="display:@(IsOpen ? "block" : "none")">
+    <div class="modal-dialog modal-dialog-centered modal-fullscreen-sm-down">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">@Title</h5>
+                <button type="button" class="btn-close" @onclick="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>@Message</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" @onclick="Close">Cancel</button>
+                <button type="button" class="btn btn-danger" @onclick="Confirm">Confirm</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@if (IsOpen)
+{
+    <div class="modal-backdrop fade show"></div>
+}
+
+@code {
+    [Parameter] public EventCallback OnConfirm { get; set; }
+
+    private bool IsOpen { get; set; }
+    private string Title { get; set; } = "Please confirm";
+    private string Message { get; set; } = "";
+
+    public void Open(string message, string? title = null)
+    {
+        Message = message;
+        if (!string.IsNullOrWhiteSpace(title)) Title = title;
+        IsOpen = true;
+        StateHasChanged(); 
+    }
+
+    public void Close()
+    {
+        IsOpen = false;
+        StateHasChanged();
+    }
+
+    private async Task Confirm()
+    {
+        await OnConfirm.InvokeAsync();
+        Close();
+    }
+}
