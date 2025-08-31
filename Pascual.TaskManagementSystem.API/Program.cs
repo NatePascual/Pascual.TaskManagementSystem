@@ -19,6 +19,15 @@ public class Program
         builder.Services.AddDbContext<ApplicationDbContext>(options =>
                            options.UseInMemoryDatabase("TaskDb")); 
 
+        builder.Services.AddCors(options =>
+        {
+            options.AddPolicy("AllowAll", policy =>
+            {
+                policy.AllowAnyOrigin()
+                      .AllowAnyHeader()
+                      .AllowAnyMethod();
+            });
+        });
 
         var app = builder.Build();
 
@@ -32,6 +41,8 @@ public class Program
             });
         }
         app.UseMiddleware<Middleware.ErrorHandlingMiddleware>();
+
+        app.UseCors("AllowAll");
         app.UseHttpsRedirection();
         app.UseAuthorization();
         app.MapControllers();

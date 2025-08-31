@@ -6,12 +6,19 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
-builder.Services.AddScoped(sp => new HttpClient
+//builder.Services.AddScoped(sp => new HttpClient
+//{
+//    BaseAddress = new Uri("https://localhost:5001/") 
+//});
+
+//builder.Services.AddScoped<TaskApiService>();
+
+builder.Services.AddHttpClient<TaskApiService>(client =>
 {
-    BaseAddress = new Uri("https://localhost:5001/") 
+    var apiBase=builder.Configuration["ApiBaseUrl"] ?? "http://localhost:8080";
+    client.BaseAddress = new Uri(apiBase); 
 });
 
-builder.Services.AddScoped<TaskApiService>();
 var app = builder.Build();
 
 
